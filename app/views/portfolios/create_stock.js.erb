@@ -1,0 +1,47 @@
+document.querySelectorAll("#new-stock .error").forEach(function(div) {div.innerHTML=""});
+<% if @stock.errors.any? %>
+  <% @stock.errors.each do |err| %>
+    var div = document.querySelector("#new-stock .error.<%= err.attribute.to_s %>");
+    div.insertAdjacentHTML("beforeend", "<div><%= err.full_message %></div>");
+  <% end %>
+<% else %>
+  var stocks = document.querySelector("#stocks");
+  stocks.insertAdjacentHTML("beforeend", "<%= j render partial:'transaction', object: @stock, as: :stock %>");
+
+    var stock = document.querySelector("div#stock_<%= @stock.id %>");
+    var area = stock.querySelector(".stock_area");
+    
+    stock.querySelector("a.stock_ticker").onclick = function(ev) {
+      ev.preventDefault();
+      if (area.style.display === "none") {
+        area.style.display = "block";
+      } else {
+        area.style.display = "none";
+      }
+    };
+    area.querySelector(".open_new_transaction").onclick = function(ev) {
+      area.querySelector(".new_transaction").style.display = "block";
+    };
+    area.querySelector(".close_new_transaction").onclick = function(ev){
+      area.querySelector(".new_transaction").style.display = "none";
+    };
+    area.querySelector('form.new_transaction').onchange = function(ev) {
+      if(check_form_filled(this)) {
+        var tmp_sa = parseFloat(this.querySelector("input#transaction_share_amount").value);
+        var tmp_value = tmp_sa * parseFloat(this.querySelector("input#transaction_cost_per_share").value) * parseFloat(this.querySelector("input#transaction_multiplier").value);
+        var c_v = parseFloat(area.querySelector(".curr_value").innerHTML);
+        var c_s = parseFloat(area.querySelector(".curr_shares").innerHTML);
+        if(this.querySelector('input#transaction_transaction_type_buy').checked) {
+          tmp_value = c_v + tmp_value;
+          tmp_sa = c_s + tmp_sa;
+        } else {
+          tmp_value = c_v - tmp_value;
+          tmp_sa = c_s - tmp_sa;
+        }
+
+        area.querySelector(".pot_value").innerHTML = tmp_value.toFixed(2);
+        area.querySelector(".pot_shares").innerHTML = tmp_sa;
+        area.querySelector(".pot_cost_avg").innerHTML = (tmp_value/tmp_sa).toFixed(4);
+      }
+    };
+<% end %>

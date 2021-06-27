@@ -1,0 +1,68 @@
+<div id="stock_<%= stock.id %>" class="stock wrapper">
+  <li>
+    <a href="#" class="stock_ticker"><%= stock.ticker %></a>
+    <% if stock.name %>
+      <em><%=stock.name%></em>
+    <% end %>
+    <%= link_to "Delete", portfolio_stock_path(@portfolio, stock), method: :delete %>
+  </li>
+
+  <div style="display: none" class="stock_area">
+    <table style="font-weight: bold;" border=2 class="transactions">
+      <tr>
+        <th>date</th><th>share amount</th><th>cost_per_share</th><th>multiplier</th><th>type</th><th>value</th>
+      </tr>
+      <%= render partial: "transaction_table", collection: stock.transactions, as: :t %>
+    </table>
+
+   
+    <div>
+      <div>
+        <span>current value: $<b class="curr_value"><%=stock.current_value%></b></span>
+        <span>current shares: <b class="curr_shares"><%=stock.current_shares%></b></span>
+        <span>current cost average: $<b class="curr_cost_avg"><%=stock.current_cost_average%></b></span>
+      </div>
+      <div>
+        <span>new value: $<b class="pot_value"><%=stock.current_value%></b></span>
+        <span>new shares: <b class="pot_shares"><%=stock.current_shares%></b></span>
+        <span>new cost average: $<b class="pot_cost_avg"><%=stock.current_cost_average%></b></span>
+      </div>
+    </div>
+   
+
+    <div>
+      <button class="open_new_transaction">Add new transaction</button>
+      <button class="close_new_transaction">Close</button>
+      <%= form_with(model:Transaction.new, url:{controller: "portfolios", action: "create_transaction", portfolio_id: @portfolio, stock_id: stock.id}, class: "new_transaction",local:false) do |form|%>
+        <p>
+          <%= form.label :date%><br>
+          <%= form.date_field :date%>
+          <div class="error transaction_date"></div>
+        </p>
+      
+        <p>
+          <%= form.label :share_amount%><br>
+          <%= form.text_field :share_amount%>
+          <div class="error share_amount"></div>
+        </p>
+        <p>
+          <%= form.label :cost_per_share%><br>
+          <%= form.text_field :cost_per_share%>
+          <div class="error cost_per_share"></div>
+        </p>
+        <p>
+          <%= form.label :multiplier%><br>
+          <%= form.text_field :multiplier%>
+          <div class="error multiplier"></div>
+        </p>
+        <p>
+          <%= form.radio_button :transaction_type, "buy"%><%= form.label :transaction_type_buy, "Buy" %>
+          <%= form.radio_button :transaction_type, "sell"%><%= form.label :transaction_type_sell, "Sell" %>
+          <div class="error transaction_type"></div>
+        </p>
+        <%= form.submit %>
+      <% end %>
+    </div>
+    <hr>
+  </div>
+</div>

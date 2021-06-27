@@ -1,0 +1,31 @@
+var area = document.querySelector("div#stock_<%=@transaction.stock_id%> .stock_area"); 
+area.querySelectorAll(".new_transaction .error").forEach(function(div) {div.innerHTML=""});
+<% if @transaction.errors.any? %>
+  <% @transaction.errors.each do |err| %>
+    var div = area.querySelector(".new_transaction .error.<%= err.attribute.to_s %>");
+    div.insertAdjacentHTML("beforeend", "<div><%= err.full_message %></div>");
+  <% end %>
+<% else %>
+  var transactions = area.querySelector(".transactions");
+  transactions.insertAdjacentHTML("beforeend", "<%= j render partial: 'transaction_table', object: @transaction, as: :t %>");
+  
+  var curr_value = area.querySelector(".curr_value");
+  var curr_shares = area.querySelector(".curr_shares");
+  var curr_cost_avg = area.querySelector(".curr_cost_avg");
+
+  <% if @transaction.transaction_type == "buy" %>
+    curr_value.innerHTML = parseFloat(curr_value.innerHTML) + <%= @transaction.share_amount * @transaction.cost_per_share * @transaction.multiplier %>; 
+    curr_shares.innerHTML = parseFloat(curr_shares.innerHTML) + <%= @transaction.share_amount %>;
+  <% else %>
+    curr_value.innerHTML = parseFloat(curr_value.innerHTML) - <%= @transaction.share_amount * @transaction.cost_per_share * @transaction.multiplier %>; 
+    curr_shares.innerHTML = parseFloat(curr_shares.innerHTML) - <%= @transaction.share_amount %>;
+  <% end %>
+
+  curr_value = parseFloat(curr_value.innerHTML)
+  curr_shares = parseFloat(curr_shares.innerHTML)
+  if(curr_value > 0 && curr_shares > 0) {
+    curr_cost_avg.innerHTML = curr_value/curr_shares;
+  } else {
+    curr_cost_avg.innerHTML = 0;
+  }
+<% end %>

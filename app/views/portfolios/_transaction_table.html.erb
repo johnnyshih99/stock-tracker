@@ -1,0 +1,28 @@
+<% if t.transaction_type == "buy" %> 
+<tr style="background: lightgreen;">
+<% else %>
+<tr style="background: mistyrose;">
+<% end %>
+  <td>
+    <%=t.date%>
+  </td>
+  <td>
+    <%=t.share_amount%>
+  </td>
+  <td>
+    <%=t.cost_per_share%>
+  </td>
+  <td>
+    <%=t.multiplier%>
+  </td>
+  <td>
+    <%=t.transaction_type%>
+  </td>
+  <td>
+    <%=t.share_amount*t.cost_per_share*t.multiplier%>
+  </td>
+  <td>
+    <button><%= link_to "x", portfolio_transaction_path(@portfolio, t), style: "text-decoration:auto; color:red; width:100%; height:100%",method: :delete %></button>
+  </td>
+</tr>
+

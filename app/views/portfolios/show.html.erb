@@ -1,0 +1,146 @@
+<h1><%= @portfolio.name %></h1>
+<div>
+  <%= link_to "Edit", edit_portfolio_path(@portfolio) %>
+  <%= link_to "Destroy", portfolio_path(@portfolio), method: :delete, data: { confirm: "Are you sure?" } %>
+</div>
+<table>
+  <tr><td>
+    <table border=2>
+      <tr><th>ticker</th><th>gain</th><th>loss</th></tr>
+      <% @portfolio.stocks.each do |stock| %>
+        <% if stock.current_shares == 0 %>
+          <% if stock.current_value < 0 %>
+          <tr>
+            <td><%=stock.ticker%></td>
+            <td><%=stock.current_value.abs%></td>
+            <td></td>
+          </tr>
+          <% else %>
+          <tr>
+            <td><%=stock.ticker%></td>
+            <td></td>
+            <td><%=stock.current_value%></td>
+          </tr>
+          <% end %>
+        <% end %>
+      <% end %>
+      <tr>
+        <td>Total</td>
+        <td><%=@portfolio.total_gain.round(2)%></td>
+        <td><%=@portfolio.total_loss.round(2)%></td>
+      </tr>
+      <tr>
+        <td></td>
+        <% if @portfolio.total_gain>@portfolio.total_loss%>
+          <td colspan="2" style="background: lightgreen;">GAIN ++ $<%=(@portfolio.total_gain-@portfolio.total_loss).round(2)%></td>
+        <% else %>
+          <td colspan="2" style="background: mistyrose;">LOSS -- $<%=(@portfolio.total_gain-@portfolio.total_loss).round(2)%> </td>
+        <% end %>
+      </tr>
+    </table>
+  </td><td>
+    <table border=2>
+      <tr><td colspan="4">BAG HODLERERDLE</td></tr>
+      <tr><th>ticker</th><th>shares</th><th>cost avg</th><th>value</th></tr>
+      <% @portfolio.bag_hold.each do |st| %>
+        <tr><td><%=st[:ticker]%></td><td><%=st[:cur_shares]%></td><td><%=st[:cur_cost_avg]%></td><td><%=st[:cur_val]%></td></tr>
+      <% end %>
+    </table>
+  </td></tr>
+</table>
+
+<ul id='stocks'>
+  <h3>Active</h3>
+  <%= render partial: 'transaction', collection: @portfolio.stocks_by_cat[:active], as: :stock %>
+  <hr>
+  <h3>Settled</h3>
+  <%= render partial: 'transaction', collection: @portfolio.stocks_by_cat[:settled], as: :stock %>
+</ul>
+
+<%= form_with(model: @stock, url: portfolio_create_stock_path(@portfolio), id: "new-stock", local:false) do |form|%>
+  <p>
+    <%= form.label :ticker%><br>
+    <%= form.text_field :ticker%>
+    <div class="error ticker"></div>
+  </p>
+  <p>
+    <%= form.label :name%><br>
+    <%= form.text_field :name%>
+    <div class="error name"></div>
+  </p>
+  <%= form.submit %>
+<% end %>
+
+
+<script>
+  if (document.readyState === "complete" || (document.readyState !== "loading" && !document.documentElement.doScroll)) {
+    init_portfolio();
+  } else {
+    document.addEventListener("DOMContentLoaded", init_portfolio());
+  }
+
+  function init_portfolio() {
+    document.querySelectorAll('#stocks .stock.wrapper').forEach(function(stock) {
+      var area = stock.querySelector(".stock_area");
+
+      stock.querySelector("a.stock_ticker").onclick = function(ev) {
+        ev.preventDefault();
+        if (area.style.display === "none") {
+          area.style.display = "block";
+        } else {
+          area.style.display = "none";
+        }
+      };
+      area.querySelector(".open_new_transaction").onclick = function(ev) {
+        area.querySelector(".new_transaction").style.display = "block";
+      };
+      area.querySelector(".close_new_transaction").onclick = function(ev){
+        area.querySelector(".new_transaction").style.display = "none";
+      };
+      area.querySelector('form.new_transaction').onchange = function(ev) {
+        if(check_form_filled(this)) {
+          var tmp_sa = parseFloat(this.querySelector("input#transaction_share_amount").value);
+          var tmp_value = tmp_sa * parseFloat(this.querySelector("input#transaction_cost_per_share").value) * parseFloat(this.querySelector("input#transaction_multiplier").value);
+          var c_v = parseFloat(area.querySelector(".curr_value").innerHTML);
+          var c_s = parseFloat(area.querySelector(".curr_shares").innerHTML);
+          if(this.querySelector('input#transaction_transaction_type_buy').checked) {
+            tmp_value = c_v + tmp_value;
+            tmp_sa = c_s + tmp_sa;
+          } else {
+            tmp_value = c_v - tmp_value;
+            tmp_sa = c_s - tmp_sa;
+          }
+
+          area.querySelector(".pot_value").innerHTML = tmp_value.toFixed(2);
+          area.querySelector(".pot_shares").innerHTML = tmp_sa;
+          area.querySelector(".pot_cost_avg").innerHTML = (tmp_value/tmp_sa).toFixed(4);
+        }
+      }; 
+    });
+  }
+
+  function check_form_filled(form) {
+    if(!form.querySelector('input#transaction_transaction_type_buy').checked && !form.querySelector('input#transaction_transaction_type_sell').checked)
+      return false;
+    var sa = parseFloat(form.querySelector("input#transaction_share_amount").value);
+    var csp = parseFloat(form.querySelector("input#transaction_cost_per_share").value);
+    var mult = parseFloat(form.querySelector("input#transaction_multiplier").value);
+    if(isNaN(sa) || isNaN(csp) || isNaN(mult)) return false;
+
+    return true;
+  }
+</script>
+
+<style>
+  #stocks a.stock_ticker {
+    font-size: 1.17em;
+  }
+
+  form.new_transaction {
+    display: none;
+  }
+
+  span {
+    padding: 15px;
+  }
+</style>
